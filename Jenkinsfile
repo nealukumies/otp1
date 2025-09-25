@@ -8,7 +8,7 @@ pipeline {
         PATH = "C:\\Program Files\\Docker\\Docker\\resources\\bin;${env.PATH}"
 
         DOCKERHUB_CREDENTIALS_ID = 'Docker_Hub'
-        DOCKERHUB_REPO = 'oonnea/otp1_tempconverter'
+        DOCKERHUB_REPO = 'oonnea/otp1_temperatureconverter'
         DOCKER_IMAGE_TAG = 'latest'
     }
 

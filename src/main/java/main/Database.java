@@ -1,3 +1,5 @@
+package main;
+
 import java.sql.*;
 import javafx.scene.control.Label;
 

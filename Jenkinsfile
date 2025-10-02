@@ -6,34 +6,52 @@ pipeline {
 
     environment {
         PATH = "C:\\Program Files\\Docker\\Docker\\resources\\bin;${env.PATH}"
-
         DOCKERHUB_CREDENTIALS_ID = 'Docker_Hub'
-        DOCKERHUB_REPO = 'oonnea/otp1_temperatureconverter'
+        DOCKERHUB_REPO = 'oonnea/otp1_temperatureconverterwithdb'
         DOCKER_IMAGE_TAG = 'latest'
     }
 
     stages {
-        stage('checking') {
+
+        stage('Checking') {
             steps {
                 git branch: 'main', url: 'https://github.com/nealukumies/otp1.git'
             }
         }
 
-        stage('build') {
+        stage('Build') {
             steps {
-                bat 'mvn clean install'
+                script {
+                    if (isUnix()) {
+                        sh 'mvn clean package -DskipTests'
+                    } else {
+                        bat 'mvn clean package -DskipTests'
+                    }
+                }
             }
         }
 
         stage('Test') {
             steps {
-                bat 'mvn test'
+                script {
+                    if (isUnix()) {
+                        sh 'mvn test'
+                    } else {
+                        bat 'mvn test'
+                    }
+                }
             }
         }
 
         stage('Code Coverage') {
             steps {
-                bat 'mvn jacoco:report'
+                script {
+                    if (isUnix()) {
+                        sh 'mvn jacoco:report'
+                    } else {
+                        bat 'mvn jacoco:report'
+                    }
+                }
             }
         }
 
@@ -52,10 +70,14 @@ pipeline {
         stage('Build Docker Image') {
             steps {
                 script {
-                    bat "docker build -t ${DOCKERHUB_REPO}:${DOCKER_IMAGE_TAG} ."
+                    if (isUnix()) {
+                        sh "docker build -t ${DOCKERHUB_REPO}:${DOCKER_IMAGE_TAG} ."
+                    } else {
+                        bat "docker build -t ${DOCKERHUB_REPO}:${DOCKER_IMAGE_TAG} ."
+                    }
                 }
             }
-        }   // ✅ close this stage before starting the next
+        }
 
         stage('Push Docker Image to Docker Hub') {
             steps {
@@ -65,11 +87,24 @@ pipeline {
                     passwordVariable: 'DOCKERHUB_PASSWORD'
                 )]) {
                     script {
-                        bat "echo %DOCKERHUB_PASSWORD% | docker login -u %DOCKERHUB_USERNAME% --password-stdin"
-                        bat "docker push ${DOCKERHUB_REPO}:${DOCKER_IMAGE_TAG}"
+                        if (isUnix()) {
+                            sh "echo $DOCKERHUB_PASSWORD | docker login -u $DOCKERHUB_USERNAME --password-stdin"
+                            sh "docker push ${DOCKERHUB_REPO}:${DOCKER_IMAGE_TAG}"
+                        } else {
+                            bat "echo %DOCKERHUB_PASSWORD% | docker login -u %DOCKERHUB_USERNAME% --password-stdin"
+                            bat "docker push ${DOCKERHUB_REPO}:${DOCKER_IMAGE_TAG}"
+                        }
                     }
                 }
             }
+        }
+
+    }
+
+    post {
+        always {
+            junit '**/target/surefire-reports/*.xml'
+            jacoco execPattern: '**/target/jacoco.exec'
         }
     }
 }

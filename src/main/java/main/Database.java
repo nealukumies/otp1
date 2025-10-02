@@ -5,7 +5,8 @@ import javafx.scene.control.Label;
 
 public class Database {
 
-    private static final String URL = "jdbc:mariadb://localhost:3306/javafx_mariadb";
+    private static final String HOST = System.getenv("DB_HOST");
+    private static final String URL = "jdbc:mariadb://" + HOST + ":3306/javafx_mariadb";
     private static final String USER = "root";
     private static final String PASSWORD = "root";
 
